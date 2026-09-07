@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "earned": 0.0,
+  "possible": 0.0,
+  "percentage": 0.0,
+  "stateful_suite": true,
+  "notes": [
+    "Tests are generated from the original row-based grader.",
+    "Some tests intentionally depend on state produced by earlier tests, such as registered users and created orders.",
+    "Skipped tests are not included in possible points."
+  ],
+  "components": {},
+  "tests": []
+}

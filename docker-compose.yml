@@ -1,0 +1,96 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: investment-postgres
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: authuser
+      POSTGRES_PASSWORD: authpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  mongodb:
+    image: mongo:7.0
+    container_name: investment-mongodb
+    environment:
+      MONGO_INITDB_DATABASE: investment_fund
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  redis:
+    image: redis:7-alpine
+    container_name: investment-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  auth_service:
+    build:
+      context: ./auth_service
+      dockerfile: Dockerfile
+    container_name: investment-auth
+    environment:
+      DATABASE_URL: postgresql://authuser:authpass@postgres:5432/auth_db
+      JWT_SECRET_KEY: development-secret-change-me-32-chars-long
+      PORT: 5000
+    ports:
+      - "5000:5000"
+    depends_on:
+      - postgres
+    command: python -c "
+      import os, time;
+      from app import app, initialize_database;
+      time.sleep(5);
+      initialize_database();
+      app.run(host='0.0.0.0', port=5000)
+      "
+
+  employee_service:
+    build:
+      context: ./employee_service
+      dockerfile: Dockerfile
+    container_name: investment-employee
+    environment:
+      MONGO_URI: mongodb://mongodb:27017
+      MONGO_DB: investment_fund
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET_KEY: development-secret-change-me-32-chars-long
+      PORT: 5001
+    ports:
+      - "5001:5001"
+    depends_on:
+      - mongodb
+      - redis
+      - auth_service
+
+  director_service:
+    build:
+      context: ./director_service
+      dockerfile: Dockerfile
+    container_name: investment-director
+    environment:
+      MONGO_URI: mongodb://mongodb:27017
+      MONGO_DB: investment_fund
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET_KEY: development-secret-change-me-32-chars-long
+      PORT: 5002
+    ports:
+      - "5002:5002"
+    depends_on:
+      - mongodb
+      - redis
+      - auth_service
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  redis_data:
