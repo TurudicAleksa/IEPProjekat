@@ -52,7 +52,7 @@ def is_director(claims):
     return claims.get("role") == "DIRECTOR"
 
 
-@app.post("/pending_orders")
+@app.get("/pending_orders")
 @jwt_required()
 def pending_orders():
     claims = get_jwt()

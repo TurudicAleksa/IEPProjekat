@@ -105,9 +105,17 @@ def search():
             operator = info_filter.get("operator")
             value = info_filter.get("value")
 
-            if not field or not operator or operator not in allowed_operators:
+            if not field or not isinstance(operator, str):
                 continue
 
+         
+            normalized_operator = operator if operator.startswith("$") else f"${operator}"
+
+            if normalized_operator not in allowed_operators:
+                continue
+            operator = normalized_operator
+
+       
             query_key = f"info.{field}"
             if query_key not in query:
                 query[query_key] = {}
